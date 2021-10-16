@@ -152,7 +152,7 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int tmin(void) {
-    return 0x80000000;
+    return 1 << 31;
 }
 //2
 /*
@@ -163,7 +163,7 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-    return !(x ^ 0x7fffffff);
+    return !((~(x + 1) ^ x)) & !!(x + 1);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -174,7 +174,10 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-    return !((x & 0xAAAAAAAA) ^ 0xAAAAAAAA);
+    int a = 0xAA;
+    int b = a <<  8 | a;
+    int c = b << 16 | b;
+    return !((x & c) ^ c);
 }
 /* 
  * negate - return -x 
@@ -221,8 +224,8 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-    unsigned sign_x = (unsigned)x >> 31;
-    unsigned sign_y = (unsigned)y >> 31;
+    int sign_x = !!(x >> 31);
+    int sign_y = !!(y >> 31);
     return (sign_x & !sign_y) | (!(sign_x ^ sign_y) & !((y + ~x + 1) >> 31));
 }
 //4
@@ -314,18 +317,18 @@ int floatFloat2Int(unsigned uf) {
     unsigned sign = uf & 0x80000000;
     unsigned exponent = uf & 0x7f800000;
     unsigned fraction = uf & 0x007fffff;
-    unsigned sign_num = sign >> 31;
-    unsigned exponent_num = (exponent >> 23) - 127;
-    unsigned fraction_num = fraction | 0x00800000;
+    int sign_num = sign >> 31;
+    int exponent_num = (exponent >> 23) - 127;
+    int fraction_num = fraction | 0x00800000;
 
-    if ((int)exponent_num > 31) {
+    if (exponent_num > 31) {
         return 0x80000000;
     }
-    else if ((int)exponent_num < 0) {
+    else if (exponent_num < 0) {
         return 0;
     }
 
-    if ((int)exponent_num > 23) {
+    if (exponent_num > 23) {
         fraction_num = fraction_num << (exponent_num - 23);
     }
     else {
